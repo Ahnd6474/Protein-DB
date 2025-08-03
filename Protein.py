@@ -1,14 +1,22 @@
+from vae_module import Tokenizer, Config, load_vae, encode, decode
+
+cfg = Config(model_path="models/vae_epoch380.pt")
+tok = Tokenizer.from_esm()
+
+model = load_vae(cfg,
+                 vocab_size=len(tok.vocab),
+                 pad_idx=tok.pad_idx,
+                 bos_idx=tok.bos_idx)
+
 class Protein:
-    def __init__(self,seq_id,seq,lat):
+    def __init__(self,seq_id,seq):
         self.seq_id = seq_id
         self.sequence = seq
-        self.latent_vec=lat
+        self.Z=encode(model, seq, tok, cfg.max_len)
     def __len__(self):
         return len(self.sequence)
     def __getitem__(self,idx):
         return self.sequence[idx]
-
-class 
 
 def comb_sort(l, s):
     n = len(l)
