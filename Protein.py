@@ -1,4 +1,4 @@
-from vae_module import Tokenizer, Config, load_vae, encode, decode
+from vae_module import Tokenizer, Config, load_vae, encode
 
 cfg = Config(model_path="models/vae_epoch380.pt")
 tok = Tokenizer.from_esm()
