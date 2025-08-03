@@ -10,8 +10,7 @@ model = load_vae(cfg,
                  bos_idx=tok.bos_idx)
 
 class Protein:
-    def __init__(self,description,seq):
-        accession, description, locus, organism=describe(description)
+    def __init__(self,accession, description, locus, organism,seq):
         self.accession = accession
         self.description = description
         self.locus = locus
