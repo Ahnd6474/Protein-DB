@@ -32,3 +32,45 @@ print(len(db))
 
 The repository includes helper utilities for parsing FASTA files and computing sequence embeddings. More advanced querying functionality can be added via the `Query` module.
 
+### BLAST searches
+
+Two helper functions simplify running BLAST queries.
+
+```python
+from Blast import protein_blast, deep_blast
+from Database import ProteinDB
+
+# Run a plain BLASTP search
+result = protein_blast("MSEQN...")
+
+# Filter by latent vector similarity then BLAST the matches
+db = ProteinDB("sqlite:///proteins.db")
+hits = deep_blast("MSEQN...", db, threshold=0.5, metric="cosine")
+```
+
+The `threshold` and `metric` arguments control how candidate sequences are
+selected. Use `metric="euclidean"` for an L2 distance cut-off or
+`metric="cosine"` for a cosine similarity threshold.
+
+### Visualization and UI
+
+A simple Streamlit application provides a graphical interface for searching
+the database and visualizing embedding results.
+
+```bash
+streamlit run app.py
+```
+
+Enter a query sequence, choose a distance metric and threshold, and the app
+will display a PCA scatter plot of the matching embeddings. Optionally, the
+interface can run BLAST on the hits and show the raw results.
+
+The plotting utility can also be used programmatically:
+
+```python
+from visualize import plot_embeddings
+
+fig = plot_embeddings(hits, "MSEQN...")
+fig.show()
+```
+
