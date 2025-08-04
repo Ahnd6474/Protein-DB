@@ -16,11 +16,30 @@ class Protein:
         self.locus = locus
         self.organism = organism
         self.sequence = seq
-        self.Z=encode(model, seq, tok, cfg.max_len)
+        self.Z=np.array(encode(model, seq, tok, cfg.max_len))
     def __len__(self):
         return len(self.sequence)
     def __getitem__(self,idx):
         return self.sequence[idx]
+    def __sub__(self,other):
+        return abs(self.Z-other.Z)
+    def __repr__(self):
+        return str({
+            "accession": self.accession,
+            "description": self.description,
+            "locus": self.locus,
+            "organism": self.organism,
+            "sequence": self.sequence,
+        })
+    def __str__(self):
+        return str({
+            "accession": self.accession,
+            "description": self.description,
+            "locus": self.locus,
+            "organism": self.organism,
+            "sequence": self.sequence,
+        })
+
 def describe(description):
     # accession (첫 번째 필드)
     parts = description.split(None, 1)
