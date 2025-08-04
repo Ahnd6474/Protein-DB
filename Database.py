@@ -32,5 +32,4 @@ class ProteinDB:
         self.proteins=list(set(self.proteins))
         self.proteins.sort()
     def query(self,query):
-        
 
