@@ -1,6 +1,7 @@
 from vae_module import Tokenizer, Config, load_vae, encode
 from Bio import SeqIO
 import re
+import numpy as np
 cfg = Config(model_path="models/vae_epoch380.pt")
 tok = Tokenizer.from_esm()
 
