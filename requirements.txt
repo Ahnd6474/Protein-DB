@@ -6,6 +6,7 @@ pandas
 scikit-learn
 PyYAML
 tqdm
+sqlalchemy
 
 # Documentation
 sphinx
