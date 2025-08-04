@@ -4,6 +4,8 @@ fair-esm
 biopython
 pandas
 scikit-learn
+matplotlib
+streamlit
 PyYAML
 tqdm
 sqlalchemy

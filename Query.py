@@ -55,3 +55,42 @@ class ProteinQuery:
             proteins = session.query(ProteinModel).all()
         proteins.sort(key=lambda p: np.linalg.norm(p.embedding - target))
         return proteins[:top]
+
+    def by_embedding(
+        self, sequence: str, threshold: float, metric: str = "euclidean"
+    ) -> List[ProteinModel]:
+        """Return proteins whose embeddings satisfy a similarity threshold.
+
+        Parameters
+        ----------
+        sequence:
+            Amino acid sequence to compare against the database.
+        threshold:
+            For ``metric='euclidean'`` this represents the maximum L2 distance.
+            For ``metric='cosine'`` it is the minimum cosine similarity.
+        metric:
+            Either ``'euclidean'`` or ``'cosine'``.
+        """
+
+        query_protein = Protein("query", "", "", "", sequence)
+        target = query_protein.Z
+        with self.Session() as session:
+            proteins = session.query(ProteinModel).all()
+
+        good = []
+        for p in proteins:
+            emb = p.embedding
+            if metric == "cosine":
+                sim = float(
+                    np.dot(emb, target)
+                    / (np.linalg.norm(emb) * np.linalg.norm(target))
+                )
+                if sim >= threshold:
+                    good.append(p)
+            elif metric == "euclidean":
+                dist = float(np.linalg.norm(emb - target))
+                if dist <= threshold:
+                    good.append(p)
+            else:
+                raise ValueError("metric must be 'euclidean' or 'cosine'")
+        return good
