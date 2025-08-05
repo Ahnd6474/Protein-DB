@@ -1,53 +1,134 @@
-"""Simple in-memory protein database storing sequences and embeddings.
+"""SQLAlchemy-backed protein database storing sequences and embeddings.
 
-This module provides a lightweight alternative to the SQLAlchemy-backed
-:class:`ProteinDB` in :mod:`Database`. It keeps only the protein sequence and its
-vector embedding and exposes a FAISS based similarity search.
+This module mirrors :class:`ProteinDB` from :mod:`Database` but keeps only the
+protein sequence and its vector embedding.  A FAISS index is used to perform
+similarity search directly on the stored embeddings.
+
 """
 
 from __future__ import annotations
 
+from typing import Iterable, List, Sequence, Tuple
+
 import faiss
 import numpy as np
-from typing import Iterable, List, Sequence, Tuple
+from Bio import SeqIO
+from sqlalchemy import Column, Integer, String, create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.types import PickleType
+
+
+Base = declarative_base()
+
+
+class ProteinSimpleModel(Base):
+    """SQLAlchemy model representing a protein with only sequence and embedding."""
+
+    __tablename__ = "proteins_simple"
+
+    id = Column(Integer, primary_key=True)
+    sequence = Column(String, unique=True)
+    embedding = Column(PickleType)
+
+
+def read_fasta(filename: str) -> List[str]:
+    """Return all sequences contained in ``filename``.
+
+    Parameters
+    ----------
+    filename:
+        Path to a FASTA file.
+    """
+
+    return [str(record.seq) for record in SeqIO.parse(filename, "fasta")]
 
 
 class ProteinDBSimple:
-    """In-memory collection of protein sequences and their embeddings."""
+    """Persistent protein database backed by SQLAlchemy."""
 
-    def __init__(self) -> None:
+    def __init__(self, url: str = "sqlite:///proteins_simple.db") -> None:
+        self.engine = create_engine(url)
+        Base.metadata.create_all(self.engine)
+        self.Session = sessionmaker(bind=self.engine)
+
         self.sequences: List[str] = []
         self._embeddings: np.ndarray | None = None
         self._index: faiss.Index | None = None
+        self._load_cache()
 
+    # ------------------------------------------------------------------
+    # Loading helpers
+    # ------------------------------------------------------------------
+    def _load_cache(self) -> None:
+        """Load all sequences and embeddings from the database."""
+
+        with self.Session() as session:
+            rows = session.query(ProteinSimpleModel).all()
+            self.sequences = [r.sequence for r in rows]
+            if rows:
+                self._embeddings = np.vstack(
+                    [np.asarray(r.embedding, dtype=np.float32) for r in rows]
+                )
+            else:
+                self._embeddings = None
+        self._index = None  # invalidate FAISS index
+
+    # ------------------------------------------------------------------
+    # Insertion helpers
+    # ------------------------------------------------------------------
     def add(self, sequence: str, embedding: Sequence[float]) -> None:
-        """Add a single protein to the database.
+        """Insert a single sequence and embedding."""
 
-        Parameters
-        ----------
-        sequence:
-            Amino acid sequence.
-        embedding:
-            Vector embedding for the sequence. Must be 1‑dimensional.
-        """
 
         vec = np.asarray(embedding, dtype=np.float32)
         if vec.ndim != 1:
             raise ValueError("Embedding must be a 1D vector")
 
-        self.sequences.append(sequence)
-        if self._embeddings is None:
-            self._embeddings = vec[None, :]
-        else:
-            self._embeddings = np.vstack([self._embeddings, vec])
+        with self.Session() as session:
+            session.add(ProteinSimpleModel(sequence=sequence, embedding=vec.tolist()))
+            session.commit()
 
-        self._index = None  # invalidate FAISS index
+        self._load_cache()
 
     def add_many(self, items: Iterable[Tuple[str, Sequence[float]]]) -> None:
-        """Add many proteins at once."""
+        """Insert many sequences and embeddings at once."""
 
+        models = []
         for seq, emb in items:
-            self.add(seq, emb)
+            vec = np.asarray(emb, dtype=np.float32)
+            if vec.ndim != 1:
+                raise ValueError("Embedding must be a 1D vector")
+            models.append(ProteinSimpleModel(sequence=seq, embedding=vec.tolist()))
+
+        with self.Session() as session:
+            session.add_all(models)
+            session.commit()
+
+        self._load_cache()
+
+    def add_from_fasta(
+        self, fasta_path: str, embeddings: Iterable[Sequence[float]]
+    ) -> None:
+        """Read sequences from a FASTA file and insert them with embeddings.
+
+        Parameters
+        ----------
+        fasta_path:
+            Path to the FASTA file.
+        embeddings:
+            Iterable of embedding vectors matching the sequences in the FASTA
+            file.
+        """
+
+        sequences = read_fasta(fasta_path)
+        embedding_list = list(embeddings)
+        if len(sequences) != len(embedding_list):
+            raise ValueError("Number of embeddings must match number of sequences")
+        self.add_many(zip(sequences, embedding_list))
+
+    # ------------------------------------------------------------------
+    # Search helpers
+    # ------------------------------------------------------------------
 
     def _ensure_index(self) -> None:
         if self._embeddings is None:
@@ -58,19 +139,7 @@ class ProteinDBSimple:
             self._index.add(self._embeddings)
 
     def search(self, vector: Sequence[float], k: int = 1000) -> List[str]:
-        """Return the ``k`` closest sequences to ``vector``.
-
-        The search is performed in the embedding space using a FAISS index.  If
-        the index has not been built yet it will be constructed on first use.
-
-        Parameters
-        ----------
-        vector:
-            Query embedding vector.
-        k:
-            Number of results to return (default 1000).
-        """
-
+        """Return the ``k`` closest sequences to ``vector``."""
         self._ensure_index()
         query = np.asarray(vector, dtype=np.float32)[None, :]
         k = min(k, len(self.sequences))
@@ -78,4 +147,5 @@ class ProteinDBSimple:
         return [self.sequences[i] for i in idx[0]]
 
 
-__all__ = ["ProteinDBSimple"]
+__all__ = ["ProteinDBSimple", "read_fasta"]
+
