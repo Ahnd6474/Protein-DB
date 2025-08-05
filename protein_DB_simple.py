@@ -3,6 +3,7 @@
 This module mirrors :class:`ProteinDB` from :mod:`Database` but keeps only the
 protein sequence and its vector embedding.  A FAISS index is used to perform
 similarity search directly on the stored embeddings.
+
 """
 
 from __future__ import annotations
@@ -78,6 +79,7 @@ class ProteinDBSimple:
     def add(self, sequence: str, embedding: Sequence[float]) -> None:
         """Insert a single sequence and embedding."""
 
+
         vec = np.asarray(embedding, dtype=np.float32)
         if vec.ndim != 1:
             raise ValueError("Embedding must be a 1D vector")
@@ -127,6 +129,7 @@ class ProteinDBSimple:
     # ------------------------------------------------------------------
     # Search helpers
     # ------------------------------------------------------------------
+
     def _ensure_index(self) -> None:
         if self._embeddings is None:
             raise ValueError("Database is empty")
@@ -137,7 +140,6 @@ class ProteinDBSimple:
 
     def search(self, vector: Sequence[float], k: int = 1000) -> List[str]:
         """Return the ``k`` closest sequences to ``vector``."""
-
         self._ensure_index()
         query = np.asarray(vector, dtype=np.float32)[None, :]
         k = min(k, len(self.sequences))
@@ -146,3 +148,4 @@ class ProteinDBSimple:
 
 
 __all__ = ["ProteinDBSimple", "read_fasta"]
+
