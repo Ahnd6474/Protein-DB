@@ -1,11 +1,12 @@
 """Query utilities for the SQLAlchemy protein database."""
+"""Query utilities for the SQLAlchemy protein database."""
 
 from typing import List
 
 import numpy as np
 
-from Database import ProteinDB, ProteinModel
-from Protein import Protein
+from .database import ProteinDB, ProteinModel
+from .protein import Protein
 
 
 class ProteinQuery:

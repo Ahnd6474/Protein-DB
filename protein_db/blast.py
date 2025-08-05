@@ -4,8 +4,8 @@ from typing import List, Tuple
 
 from Bio.Blast import NCBIWWW
 
-from Database import ProteinDB
-from Query import ProteinQuery
+from .database import ProteinDB
+from .query import ProteinQuery
 
 
 def protein_blast(sequence: str, program: str = "blastp", database: str = "nr") -> str:
