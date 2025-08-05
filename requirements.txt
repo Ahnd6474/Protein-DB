@@ -9,6 +9,7 @@ streamlit
 PyYAML
 tqdm
 sqlalchemy
+faiss-cpu
 
 # Documentation
 sphinx
