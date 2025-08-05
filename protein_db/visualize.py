@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.decomposition import PCA
 
-from Database import ProteinModel
-from Protein import Protein
+from .database import ProteinModel
+from .protein import Protein
 
 
 def plot_embeddings(proteins: List[ProteinModel], query_sequence: str) -> plt.Figure:

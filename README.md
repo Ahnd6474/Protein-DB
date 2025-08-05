@@ -15,7 +15,7 @@ pip install -r requirements.txt
 ### Working with proteins
 
 ```python
-from Protein import Protein
+from protein_db import Protein
 protein = Protein(accession="ABC123", description="Sample protein", locus="locus1", organism="E. coli", seq="MSEQN...")
 print(len(protein))          # Sequence length
 print(protein.Z.shape)       # Latent representation from the VAE
@@ -24,21 +24,21 @@ print(protein.Z.shape)       # Latent representation from the VAE
 ### Loading a FASTA file into a database
 
 ```python
-from Database import ProteinDB
+from protein_db import ProteinDB
 
-db = ProteinDB(fasta="proteins.fasta")
-print(len(db))
+db = ProteinDB()
+db.add_from_fasta("proteins.fasta")
 ```
 
-The repository includes helper utilities for parsing FASTA files and computing sequence embeddings. More advanced querying functionality can be added via the `Query` module.
+Set ``simple=True`` to store only sequences and embeddings for fast vector search.
+The repository includes helper utilities for parsing FASTA files and computing sequence embeddings. More advanced querying functionality can be added via the `ProteinQuery` class.
 
 ### BLAST searches
 
 Two helper functions simplify running BLAST queries.
 
 ```python
-from Blast import protein_blast, deep_blast
-from Database import ProteinDB
+from protein_db import protein_blast, deep_blast, ProteinDB
 
 # Run a plain BLASTP search
 result = protein_blast("MSEQN...")
@@ -68,7 +68,7 @@ interface can run BLAST on the hits and show the raw results.
 The plotting utility can also be used programmatically:
 
 ```python
-from visualize import plot_embeddings
+from protein_db import plot_embeddings
 
 fig = plot_embeddings(hits, "MSEQN...")
 fig.show()

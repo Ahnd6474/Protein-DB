@@ -2,10 +2,10 @@
 
 import streamlit as st
 
-from Database import ProteinDB
-from Query import ProteinQuery
-from Blast import deep_blast
-from visualize import plot_embeddings
+from protein_db.database import ProteinDB
+from protein_db.query import ProteinQuery
+from protein_db.blast import deep_blast
+from protein_db.visualize import plot_embeddings
 
 
 st.title("Protein Database UI")
