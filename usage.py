@@ -1,4 +1,4 @@
-from protein_db import ProteinDB, Protein, ProteinQuery
+from protein_db import ProteinDB, Protein, ProteinQuery, generate_sequences
 
 
 if __name__ == "__main__":
@@ -11,6 +11,13 @@ if __name__ == "__main__":
     except Exception as exc:
         # Database may be empty if no sequences were loaded
         print(f"Vector search failed: {exc}")
+
+    # Sequence generation using the genetic algorithm
+    try:
+        seqs = generate_sequences(db, query.Z, cos_threshold=0.2, rmse_threshold=0.2)
+        print("Generated sequences:", seqs)
+    except Exception as exc:
+        print(f"Generation failed: {exc}")
 
     # Text-based queries on the full database
     db_full = ProteinDB(url="sqlite:///proteins.db")

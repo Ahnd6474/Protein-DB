@@ -52,6 +52,23 @@ The `threshold` and `metric` arguments control how candidate sequences are
 selected. Use `metric="euclidean"` for an L2 distance cut-off or
 `metric="cosine"` for a cosine similarity threshold.
 
+### Sequence generation
+
+Generate candidate sequences that approach a target embedding using a simple
+genetic algorithm.
+
+```python
+from protein_db import Protein, ProteinDB, generate_sequences
+
+db = ProteinDB(url="sqlite:///proteins_simple.db", simple=True)
+target_vec = Protein("tmp", "", "", "", "MSEQN...").Z
+seqs = generate_sequences(db, target_vec, cos_threshold=0.2, rmse_threshold=0.2)
+print(seqs)  # Five optimized sequences
+```
+
+The `cos_threshold` and `rmse_threshold` arguments control acceptance of
+mutations during evolution.
+
 ### Visualization and UI
 
 A simple Streamlit application provides a graphical interface for searching
