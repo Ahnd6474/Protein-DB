@@ -12,6 +12,25 @@ pip install -r requirements.txt
 
 ## Usage
 
+
+## Dataset & Embeddings
+
+### Source dataset (UniRef50, 1M subset)
+The sample data in this repository is derived from **UniRef50**, using an approximately **1 million sequence subset**. This subset is intentionally lightweight to make vector indexing, nearest‑neighbor search, and quick demos feasible on a single machine.
+
+### Embedding generation (LATTE encoder)
+All sequences were passed through the **LATTE** paper’s **encoder** to produce **latent embeddings** (e.g., 256‑dim). The encoder was trained with structural/perceptual objectives so that the latent space reflects coarse structural similarity in addition to sequence patterns. These embeddings can be stored in a vector database (e.g., FAISS) for fast similarity search and downstream analysis.
+
+### Intended use: “Deep BLAST” (latent prefilter → alignment)
+As outlined in the LATTE paper, a practical extension is a two‑stage search workflow:
+1) **Prefilter in latent space** (e.g., cosine similarity) to quickly shortlist candidates, then  
+2) **Run alignment (e.g., BLAST)** only on the shortlisted sequences to keep interpretability and precision.
+This can reduce fan‑out and wall‑clock time substantially on large corpora while preserving alignment‑based interpretability.
+
+### Reproducibility notes
+- Re‑generate embeddings by running the **LATTE encoder** on the same sequences with a fixed model/version.  
+- For large‑scale search, store only the **(sequence, embedding)** pairs and index the embeddings with your preferred ANN library.
+
 ### Working with proteins
 
 ```python
